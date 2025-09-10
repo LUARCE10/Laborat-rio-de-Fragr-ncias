@@ -8,15 +8,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: Calm Harmony -->
-    <!-- Application Structure Plan: The application is structured as an interactive 'Fragrance Creation Lab' rather than a linear guide. It features three main sections: 1) An 'Essence Explorer' for filtering and learning about available scents. 2) A 'Fragrance Creator' tool that guides users from selecting a desired emotion to seeing suggested combinations and interactively building a scent pyramid (top, middle, base notes). 3) A 'Launch Guide' checklist for next steps. This task-oriented flow (Explore -> Create -> Plan) was chosen to make the content more engaging, practical, and to empower the user to actively apply the guide's concepts, which is more effective than passive reading for a creative task like fragrance design. -->
-    <!-- Visualization & Content Choices: Content is organized into interactive components. The core data (essences, families, combinations) is presented in a filterable card grid (HTML/JS) for easy exploration. The abstract concept of a scent pyramid is turned into a tangible, interactive diagram (HTML/CSS/JS with drag-and-drop) to improve understanding and engagement. The guided creation process uses simple buttons and dynamically updated text blocks (JS) to present client briefing outcomes as actionable suggestions. The launch plan is an interactive checklist (HTML). No chart libraries were needed as the source is qualitative. This approach prioritizes hands-on learning and creation. -->
-    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #FDFBF8;
-            color: #402E32;
+            background-color: #FDFBF8; /* Off-white background */
+            color: #402E32; /* Deep brown text */
         }
         h1, h2, h3 {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -26,67 +22,72 @@
             transition: color 0.3s ease;
         }
         .nav-link:hover {
-            color: #C58940;
-        }
-        .filter-btn {
-            transition: all 0.3s ease;
-            border: 1px solid #E5D9B6;
-        }
-        .filter-btn.active {
-            background-color: #A47E3B;
-            color: #FDFBF8;
-            border-color: #A47E3B;
-        }
-        .essence-card {
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            cursor: grab;
-        }
-        .essence-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-        .pyramid-dropzone {
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-            border: 2px dashed #E5D9B6;
-        }
-        .pyramid-dropzone.drag-over {
-            background-color: #E5D9B6;
-            border-color: #A47E3B;
-        }
-        .emotion-btn {
-            transition: all 0.3s ease;
-        }
-        .emotion-btn:hover, .emotion-btn.active {
-            background-color: #402E32;
-            color: #FDFBF8;
-            transform: translateY(-2px);
-        }
-        .checklist-item label {
-            transition: color 0.3s ease;
-        }
-        .checklist-item input:checked + label {
-            text-decoration: line-through;
-            color: #A47E3B;
+            color: #C5A880; /* Gold accent on hover */
         }
         .gemini-btn {
-            background-color: #A47E3B;
+            background-color: #402E32;
             color: #FDFBF8;
         }
         .gemini-btn:hover {
-            background-color: #8b6a31;
+            background-color: #5a4247;
         }
-        .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #A47E3B;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
+        .gemini-btn:disabled {
+            background-color: #a19194;
+            cursor: not-allowed;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .essence-card {
+            transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+            cursor: pointer;
+        }
+        .essence-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+        }
+        .pyramid-zone {
+            border: 2px dashed #D1C4E9; /* Lighter purple border */
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .pyramid-zone.active-zone {
+             border-color: #8C6A5E; /* Warm brown border for active */
+             background-color: #F5F1EE; /* Slightly darker bg for active */
+             border-style: solid;
+        }
+        .note-tag {
+            display: inline-flex;
+            align-items: center;
+            background-color: #8C6A5E; /* Warm brown */
+            color: white;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            margin: 4px;
+        }
+        .note-tag button {
+            margin-left: 8px;
+            background: none;
+            border: none;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        /* Custom form styling */
+        .form-checkbox {
+            color: #8C6A5E;
+        }
+        .form-checkbox:focus {
+            ring: #C5A880;
+        }
+        .form-textarea {
+            border-color: #D1C4E9;
+        }
+        .form-textarea:focus {
+            border-color: #C5A880;
+            ring: #C5A880;
+        }
+        .suggestion-card {
+             border: 1px solid #e2d9d4;
+             transition: all 0.3s ease;
         }
     </style>
 </head>
@@ -98,466 +99,559 @@
                 LUARCE
             </a>
             <div class="hidden md:flex items-center space-x-8">
-                <a href="#explorer" class="nav-link">Explorar Essências</a>
-                <a href="#creator" class="nav-link">Criador de Fragrâncias</a>
-                <a href="#launch-guide" class="nav-link">Guia de Lançamento</a>
+                <a href="#briefing" class="nav-link">Briefing</a>
+                <a href="#creator" class="nav-link">Criador</a>
+                <a href="#explorer" class="nav-link">Essências</a>
             </div>
         </nav>
     </header>
 
-    <main class="container mx-auto px-6 py-12 md:py-20">
-
-        <section class="text-center mb-20">
-            <h1 class="text-4xl md:text-6xl font-bold mb-4">Laboratório de Fragrâncias</h1>
-            <p class="text-lg md:text-xl max-w-3xl mx-auto text-gray-600">Transforme a identidade da sua marca em uma assinatura olfativa memorável. Explore, crie e planeje sua próxima fragrância de sucesso.</p>
+    <main class="container mx-auto px-6 py-12">
+        <section class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-4 text-[#402E32]">Laboratório de Fragrâncias</h1>
+            <p class="max-w-3xl mx-auto text-lg text-gray-600">Crie uma assinatura olfativa única. Explore nossas essências, monte sua pirâmide e deixe a inteligência artificial dar vida à sua criação.</p>
         </section>
 
-        <section id="explorer" class="mb-20">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Explore Nossas Essências</h2>
-            <p class="text-center max-w-2xl mx-auto text-gray-600 mb-10">Filtre por família olfativa para conhecer os blocos de construção do seu próximo aroma. Arraste uma essência para a pirâmide na seção 'Criador' para começar a montar sua fragrância.</p>
-            
-            <div id="filters" class="flex flex-wrap justify-center gap-2 md:gap-4 mb-10"></div>
-            
-            <div id="essence-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"></div>
-        </section>
-
-        <section id="creator" class="mb-20 bg-white p-6 md:p-10 rounded-2xl shadow-lg border border-gray-100">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-10">Criador de Fragrâncias</h2>
-            
-            <div class="grid lg:grid-cols-2 gap-10 md:gap-16">
+        <section id="briefing" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8">Briefing Criativo</h2>
+            <p class="text-center text-lg text-gray-600 max-w-3xl mx-auto mb-12">Responda estas perguntas para receber sugestões de fragrâncias personalizadas.</p>
+            <div id="briefing-form" class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md space-y-8">
                 
                 <div>
-                    <h3 class="text-2xl font-semibold mb-2">Passo 1: Defina a Emoção</h3>
-                    <p class="text-gray-600 mb-6">Qual sensação principal sua fragrância deve transmitir? Sua escolha guiará nossas sugestões de combinações harmônicas.</p>
-                    <div id="emotion-filters" class="grid grid-cols-2 gap-3 mb-8"></div>
-                    
-                    <div id="suggestion-box" class="bg-stone-50 p-6 rounded-lg min-h-[200px]">
-                        <h4 class="text-xl font-semibold mb-2 text-[#402E32]">Nossas Sugestões</h4>
-                        <p id="suggestion-text" class="text-gray-600">Selecione uma emoção acima para ver combinações recomendadas e a psicologia por trás delas.</p>
+                    <h3 class="font-bold text-xl mb-4">1. Objetivo da fragrância</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Uso pessoal" class="form-checkbox"><span>Uso pessoal</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Presente especial" class="form-checkbox"><span>Presente especial</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Identidade olfativa da marca" class="form-checkbox"><span>Identidade olfativa</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Evento específico" class="form-checkbox"><span>Evento específico</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Outro" class="form-checkbox"><span>Outro</span></label>
                     </div>
                 </div>
 
                 <div>
-                    <h3 class="text-2xl font-semibold mb-2">Passo 2: Construa sua Pirâmide</h3>
-                    <p class="text-gray-600 mb-6">Arraste as essências da seção de exploração e solte-as nas camadas correspondentes para montar a estrutura da sua fragrância.</p>
-                    <div class="space-y-4">
-                        <div class="text-center">
-                            <h4 class="font-semibold text-amber-600">Notas de Saída</h4>
-                            <div id="dropzone-top" class="pyramid-dropzone h-20 rounded-t-lg p-2 flex items-center justify-center flex-wrap gap-2" data-note-type="top">
-                                <span class="text-gray-400">Primeira Impressão</span>
-                            </div>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="font-semibold text-teal-600">Notas de Corpo</h4>
-                            <div id="dropzone-middle" class="pyramid-dropzone h-24 p-2 flex items-center justify-center flex-wrap gap-2" data-note-type="middle">
-                                <span class="text-gray-400">O Coração</span>
-                            </div>
-                        </div>
-                        <div class="text-center">
-                            <h4 class="font-semibold text-stone-700">Notas de Fundo</h4>
-                            <div id="dropzone-base" class="pyramid-dropzone h-28 rounded-b-lg p-2 flex items-center justify-center flex-wrap gap-2" data-note-type="base">
-                                <span class="text-gray-400">A Memória</span>
-                            </div>
-                        </div>
-                    </div>
-                     <button id="reset-pyramid" class="mt-4 w-full bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300 transition-colors">Limpar Pirâmide</button>
-                     <button id="generate-story-btn" class="mt-2 w-full gemini-btn font-semibold py-2 rounded-lg transition-colors hidden">✨ Gerar Nome e História</button>
-                </div>
-            </div>
-            <div id="story-output" class="mt-10 max-w-3xl mx-auto hidden"></div>
-            <div id="bottle-output" class="mt-10 max-w-3xl mx-auto hidden"></div>
-        </section>
-
-        <section id="launch-guide">
-            <h2 class="text-3xl md:text-4xl font-bold text-center mb-4">Guia de Lançamento</h2>
-            <p class="text-center max-w-2xl mx-auto text-gray-600 mb-10">Com sua fragrância criada, use este checklist para garantir que seu lançamento seja um sucesso e que a história do seu aroma seja contada da melhor forma.</p>
-
-            <div class="max-w-2xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100">
-                <div class="space-y-4">
-                    <div class="checklist-item flex items-start">
-                        <input type="checkbox" id="check1" class="mt-1 mr-3 h-5 w-5 rounded border-gray-300 text-[#A47E3B] focus:ring-[#A47E3B]">
-                        <label for="check1" class="flex flex-col">
-                            <span class="font-medium">Testar o Protótipo</span>
-                            <span class="text-sm text-gray-500">Crie amostras e teste em diferentes ambientes. Colete feedback do seu público-alvo.</span>
-                        </label>
-                    </div>
-                    <div class="checklist-item flex items-start">
-                        <input type="checkbox" id="check2" class="mt-1 mr-3 h-5 w-5 rounded border-gray-300 text-[#A47E3B] focus:ring-[#A47E3B]">
-                        <label for="check2" class="flex flex-col">
-                            <span class="font-medium">Criar a História (Storytelling)</span>
-                            <span class="text-sm text-gray-500">Desenvolva uma narrativa envolvente. O que inspirou essa fragrância? Qual memória ela evoca?</span>
-                        </label>
-                    </div>
-                    <div class="checklist-item flex items-start">
-                        <input type="checkbox" id="check3" class="mt-1 mr-3 h-5 w-5 rounded border-gray-300 text-[#A47E3B] focus:ring-[#A47E3B]">
-                        <label for="check3" class="flex flex-col">
-                            <span class="font-medium">Promover com os Sentidos</span>
-                            <span class="text-sm text-gray-500">Use a narrativa na sua comunicação visual e textual. Descreva as notas e as sensações que o aroma provoca.</span>
-                        </label>
+                    <h3 class="font-bold text-xl mb-4">2. O que você deseja transmitir?</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Tranquilidade" class="form-checkbox"><span>Tranquilidade</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Energia" class="form-checkbox"><span>Energia</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Sofisticação" class="form-checkbox"><span>Sofisticação</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Leveza" class="form-checkbox"><span>Leveza</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Aconchego" class="form-checkbox"><span>Aconchego</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Alegria" class="form-checkbox"><span>Alegria</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Delicadeza" class="form-checkbox"><span>Delicadeza</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Outro" class="form-checkbox"><span>Outro</span></label>
                     </div>
                 </div>
+
+                <div>
+                    <h3 class="font-bold text-xl mb-4">3. Preferências Olfativas</h3>
+                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Cítricos" class="form-checkbox"><span>Cítricos</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Florais" class="form-checkbox"><span>Florais</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Amadeirados" class="form-checkbox"><span>Amadeirados</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Gourmands" class="form-checkbox"><span>Gourmands</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Especiarias" class="form-checkbox"><span>Especiarias</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Herbais" class="form-checkbox"><span>Herbais</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Orientais" class="form-checkbox"><span>Orientais</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Não sei / Sugestões" class="form-checkbox"><span>Não sei / Sugestões</span></label>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-xl mb-4">4. Produtos desejados</h3>
+                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Vela aromática" class="form-checkbox"><span>Vela aromática</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Difusor de varetas" class="form-checkbox"><span>Difusor de varetas</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Home spray" class="form-checkbox"><span>Home spray</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Sabonete líquido" class="form-checkbox"><span>Sabonete líquido</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Álcool em gel" class="form-checkbox"><span>Álcool em gel</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Essência concentrada" class="form-checkbox"><span>Essência concentrada</span></label>
+                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Outro" class="form-checkbox"><span>Outro</span></label>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="font-bold text-xl mb-4">5. Observações</h3>
+                    <label for="observacoes" class="text-sm text-gray-600 block">Há algum ingrediente ou nota que você não gosta ou deseja evitar?</label>
+                    <textarea id="observacoes" name="observacoes" rows="4" class="mt-2 w-full p-3 border rounded-lg form-textarea"></textarea>
+                </div>
+                 
+                <div>
+                    <h3 class="font-bold text-xl mb-4">6. Referências</h3>
+                    <label for="referencias" class="text-sm text-gray-600 block">Deseja que o aroma seja inspirado em alguma memória, produto ou lugar especial?</label>
+                    <textarea id="referencias" name="referencias" rows="4" class="mt-2 w-full p-3 border rounded-lg form-textarea"></textarea>
+                </div>
+
+                <div class="pt-4">
+                     <button id="get-suggestions-btn" class="w-full gemini-btn font-semibold py-3 rounded-lg transition-colors text-lg">
+                        💡 Gerar Sugestões com IA
+                    </button>
+                </div>
+            </div>
+
+             <div id="suggestions-output" class="max-w-4xl mx-auto mt-8">
+                <!-- AI Suggestions will be rendered here -->
             </div>
         </section>
 
+        <section id="creator" class="mb-16">
+            <h2 class="text-3xl font-bold text-center mb-8">Criador de Fragrâncias</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                <div class="lg:col-span-1 space-y-4">
+                     <div class="bg-white p-6 rounded-lg shadow-md">
+                        <h3 class="font-bold text-xl mb-2 text-center">Pirâmide Olfativa</h3>
+                        <p class="text-center text-sm text-gray-500 mb-4">1. Clique em uma seção. <br> 2. Depois, clique nas essências para adicionar.</p>
+                        <div id="top-notes-zone" data-note-type="top" class="pyramid-zone p-4 rounded-lg min-h-[100px] text-center">
+                            <h4 class="font-semibold text-gray-500">Notas de Saída</h4>
+                            <div class="flex flex-wrap justify-center mt-2"></div>
+                        </div>
+                        <div id="middle-notes-zone" data-note-type="middle" class="pyramid-zone p-4 mt-4 rounded-lg min-h-[100px] text-center">
+                            <h4 class="font-semibold text-gray-500">Notas de Corpo</h4>
+                             <div class="flex flex-wrap justify-center mt-2"></div>
+                        </div>
+                        <div id="base-notes-zone" data-note-type="base" class="pyramid-zone p-4 mt-4 rounded-lg min-h-[100px] text-center">
+                            <h4 class="font-semibold text-gray-500">Notas de Fundo</h4>
+                             <div class="flex flex-wrap justify-center mt-2"></div>
+                        </div>
+                    </div>
+                     <div id="action-button-container" class="mt-4">
+                        <!-- Botão para gerar nome/história aparecerá aqui -->
+                    </div>
+                </div>
+
+                <div id="ai-results" class="lg:col-span-2 space-y-6">
+                     <div id="story-output" class="min-h-[100px]">
+                        <!-- Nome e história da fragrância aparecerão aqui -->
+                    </div>
+                    <div id="image-output" class="text-center">
+                        <!-- Imagem do frasco aparecerá aqui -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="guide" class="my-16">
+            <h2 class="text-3xl font-bold text-center mb-8">Guia da Pirâmide Olfativa</h2>
+            <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Card Saída -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#C5A880]">
+                    <h3 class="font-bold text-xl mb-2 text-[#8C6A5E]">Notas de Saída</h3>
+                    <p class="text-sm text-gray-600 mb-2"><strong>A primeira impressão.</strong> Leves e voláteis, duram de 5 a 15 minutos e despertam a atenção.</p>
+                    <p class="text-sm font-semibold text-gray-800">Ideal para: Cítricos, Frescos, Aquáticos.</p>
+                </div>
+                <!-- Card Corpo -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#C5A880]">
+                    <h3 class="font-bold text-xl mb-2 text-[#8C6A5E]">Notas de Corpo</h3>
+                    <p class="text-sm text-gray-600 mb-2"><strong>A alma do perfume.</strong> Formam o tema principal e duram de 20 a 60 minutos.</p>
+                    <p class="text-sm font-semibold text-gray-800">Ideal para: Florais, Frutados, Aromáticos.</p>
+                </div>
+                <!-- Card Fundo -->
+                <div class="bg-white p-6 rounded-lg shadow-sm border-t-4 border-[#C5A880]">
+                    <h3 class="font-bold text-xl mb-2 text-[#8C6A5E]">Notas de Fundo</h3>
+                    <p class="text-sm text-gray-600 mb-2"><strong>A base da fragrância.</strong> Dão profundidade, fixação e podem durar horas.</p>
+                    <p class="text-sm font-semibold text-gray-800">Ideal para: Amadeirados, Gourmand, Orientais.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="explorer" class="pt-12">
+            <h2 class="text-3xl font-bold text-center mb-8">Explore Nossas Essências</h2>
+            <div id="essences-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- Essences will be loaded here by JavaScript -->
+            </div>
+        </section>
     </main>
-
-    <footer class="bg-white mt-20 border-t border-gray-100">
+    
+    <footer class="bg-white mt-16">
         <div class="container mx-auto px-6 py-8 text-center text-gray-500">
-            <p>&copy; 2025 LUARCE. Criando experiências olfativas únicas.</p>
+            <p>&copy; 2024 LUARCE Fragrance Lab. Todos os direitos reservados.</p>
         </div>
     </footer>
 
+
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const essences = [
-                { name: 'Limão Siciliano', family: 'Cítricas', note: 'top' },
-                { name: 'Alecrim e Limão Siciliano', family: 'Cítricas', note: 'top' },
-                { name: 'Coconut Lemonade', family: 'Cítricas', note: 'top' },
-                { name: 'Bamboo e Alecrim', family: 'Herbais / Verdes', note: 'middle' },
-                { name: 'Cascas e Folhas', family: 'Herbais / Verdes', note: 'middle' },
-                { name: 'Lavanda', family: 'Florais', note: 'middle' },
-                { name: 'Jasmim e Romã', family: 'Florais', note: 'middle' },
-                { name: 'Orquídea', family: 'Florais', note: 'middle' },
-                { name: 'Chá Branco', family: 'Florais', note: 'middle' },
-                { name: 'Maçã com Canela', family: 'Frutadas', note: 'middle' },
-                { name: 'Pêssego e Champagne', family: 'Frutadas', note: 'top' },
-                { name: 'Cereja e Avelã', family: 'Frutadas', note: 'middle' },
-                { name: 'Cassis e Hibisco', family: 'Frutadas', note: 'middle' },
-                { name: 'Âmbar e Bergamota', family: 'Orientais / Amadeiradas', note: 'base' },
-                { name: 'Vanilla New', family: 'Orientais / Amadeiradas', note: 'base' },
-                { name: 'Café Torrado', family: 'Orientais / Amadeiradas', note: 'base' },
-                { name: 'Floresta Encantada', family: 'Orientais / Amadeiradas', note: 'base' },
-                { name: 'Limão e Verbena', family: 'Marinhas / Aquáticas', note: 'top' },
-                { name: 'Canela', family: 'Especiarias / Gourmand', note: 'middle' },
-                { name: 'Alecrim', family: 'Óleos Essenciais', note: 'middle' },
-                { name: 'Sândalo', family: 'Óleos Essenciais', note: 'base' },
-                { name: 'Tea Tree (Melaleuca)', family: 'Óleos Essenciais', note: 'middle' },
-                { name: 'Menta Piperita', family: 'Óleos Essenciais', note: 'top' },
-                { name: 'Laranja Doce', family: 'Óleos Essenciais', note: 'top' },
-                { name: 'Gerânio', family: 'Óleos Essenciais', note: 'middle' },
-            ];
+        const essences = [
+            { name: 'Maçã com Canela', family: 'Frutado' },
+            { name: 'Canela', family: 'Especiado' },
+            { name: 'Limão Siciliano', family: 'Cítrico' },
+            { name: 'Bamboo', family: 'Verde' },
+            { name: 'Alecrim', family: 'Aromático' },
+            { name: 'Jasmin e Romã', family: 'Floral' },
+            { name: 'Lavanda', family: 'Floral' },
+            { name: 'Pêssego', family: 'Frutado' },
+            { name: 'Limão e Verbena', family: 'Cítrico' },
+            { name: 'Oceano', family: 'Aquático' },
+            { name: 'Vanilla New', family: 'Gourmand' },
+            { name: 'Âmbar e Bergamota', family: 'Oriental' },
+            { name: 'Cereja e Avelã', family: 'Gourmand' },
+            { name: 'Cascas e Folhas', family: 'Amadeirado' },
+            { name: 'Orquídea (Ange e Demon)', family: 'Floral' },
+            { name: 'Cassis e Hibisco', family: 'Frutado' },
+            { name: 'Chá Branco', family: 'Fresco' },
+            { name: 'Café Torrado', family: 'Gourmand' },
+            { name: 'Cocolemoned', family: 'Frutado' },
+            { name: 'Floresta Encantada', family: 'Amadeirado' },
+        ];
+        const essenceNames = essences.map(e => e.name);
 
-            const families = ['Todas', ...new Set(essences.map(e => e.family))];
-            
-            const suggestions = {
-                tranquilidade: {
-                    title: 'Combinações para Tranquilidade',
-                    text: 'Para um efeito calmante, combine notas florais e herbais com uma base amadeirada. Elas promovem relaxamento e bem-estar, ideal para spas, quartos e espaços de meditação.',
-                    examples: ['`Lavanda` + `Sândalo` (equilíbrio)', '`Chá Branco` + `Bamboo` (leveza)']
-                },
-                energia: {
-                    title: 'Combinações para Energia',
-                    text: 'Para um impulso de vitalidade, misture notas cítricas vibrantes com herbais estimulantes. Perfeito para escritórios, academias e para começar o dia com foco.',
-                    examples: ['`Limão Siciliano` + `Alecrim` (foco)', '`Laranja Doce` + `Menta Piperita` (alegria)']
-                },
-                aconchego: {
-                    title: 'Combinações para Aconchego',
-                    text: 'Para criar uma atmosfera acolhedora, una notas gourmand doces e especiarias quentes. Evocam memórias felizes e a sensação de lar.',
-                    examples: ['`Vanilla New` + `Maçã com Canela` (conforto)', '`Cereja e Avelã` + `Café Torrado` (sofisticação)']
-                },
-                sofisticacao: {
-                    title: 'Combinações para Sofisticação',
-                    text: 'Para um aroma luxuoso e marcante, combine florais complexos com notas orientais e ambaradas. Ideal para boutiques, hotéis e eventos especiais.',
-                    examples: ['`Jasmim e Romã` + `Âmbar e Bergamota` (elegância)', '`Ange ou Demon` (mistério)']
-                }
-            };
-            
-            const filtersContainer = document.getElementById('filters');
-            const essenceGrid = document.getElementById('essence-grid');
-            const emotionFiltersContainer = document.getElementById('emotion-filters');
-            const suggestionBox = document.getElementById('suggestion-box');
-            const suggestionText = document.getElementById('suggestion-text');
-            const generateStoryBtn = document.getElementById('generate-story-btn');
-            const storyOutput = document.getElementById('story-output');
+        const essencesGrid = document.getElementById('essences-grid');
+        const topNotesZone = document.getElementById('top-notes-zone');
+        const middleNotesZone = document.getElementById('middle-notes-zone');
+        const baseNotesZone = document.getElementById('base-notes-zone');
+        const pyramidZones = [topNotesZone, middleNotesZone, baseNotesZone];
+        const actionButtonContainer = document.getElementById('action-button-container');
+        const storyOutput = document.getElementById('story-output');
+        const imageOutput = document.getElementById('image-output');
+        const getSuggestionsBtn = document.getElementById('get-suggestions-btn');
+        const suggestionsOutput = document.getElementById('suggestions-output');
+        
+        // State Management
+        let activeZoneId = null;
+        const selectedNotes = {
+            top: new Set(),
+            middle: new Set(),
+            base: new Set()
+        };
 
-            function renderFilters() {
-                families.forEach(family => {
-                    const btn = document.createElement('button');
-                    btn.textContent = family;
-                    btn.className = 'filter-btn px-4 py-2 rounded-full text-sm font-medium bg-white text-stone-700';
-                    if (family === 'Todas') {
-                        btn.classList.add('active');
-                    }
-                    btn.addEventListener('click', () => {
-                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        renderEssences(family);
-                    });
-                    filtersContainer.appendChild(btn);
-                });
+        function renderEssences() {
+            essencesGrid.innerHTML = '';
+            essences.forEach(essence => {
+                const card = document.createElement('div');
+                card.className = 'essence-card bg-white p-4 rounded-lg shadow-sm text-center';
+                card.dataset.essence = essence.name;
+                card.innerHTML = `
+                    <h3 class="font-semibold text-md">${essence.name}</h3>
+                    <p class="text-sm text-gray-500">${essence.family}</p>
+                `;
+                essencesGrid.appendChild(card);
+            });
+        }
+        
+        // --- CLICK TO SELECT LOGIC ---
+        function setActiveZone(zoneElement) {
+            pyramidZones.forEach(zone => zone.classList.remove('active-zone'));
+            if (zoneElement) {
+                zoneElement.classList.add('active-zone');
+                activeZoneId = zoneElement.id;
+            } else {
+                activeZoneId = null;
             }
+        }
 
-            function renderEssences(activeFamily = 'Todas') {
-                essenceGrid.innerHTML = '';
-                const filteredEssences = activeFamily === 'Todas' ? essences : essences.filter(e => e.family === activeFamily);
+        function addEssenceToActiveZone(essenceName) {
+            if (!activeZoneId) {
+                topNotesZone.classList.add('active-zone');
+                activeZoneId = topNotesZone.id;
+            }
+            const noteType = document.getElementById(activeZoneId).dataset.noteType;
+            if (selectedNotes[noteType].has(essenceName)) return; 
+            
+            selectedNotes[noteType].add(essenceName);
+            renderPyramid();
+            checkCompletion();
+        }
+
+        function removeEssence(noteType, essenceName) {
+            selectedNotes[noteType].delete(essenceName);
+            renderPyramid();
+            checkCompletion();
+        }
+
+        function renderPyramid() {
+            pyramidZones.forEach(zone => {
+                const noteType = zone.dataset.noteType;
+                const container = zone.querySelector('.flex');
+                container.innerHTML = '';
                 
-                filteredEssences.forEach(essence => {
-                    const card = document.createElement('div');
-                    card.className = 'essence-card bg-white p-4 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center';
-                    card.draggable = true;
-                    card.dataset.name = essence.name;
-                    card.dataset.family = essence.family;
-                    card.dataset.note = essence.note;
-
-                    card.innerHTML = `<h3 class="font-semibold">${essence.name}</h3><p class="text-xs text-gray-500">${essence.family}</p>`;
-
-                    card.addEventListener('dragstart', handleDragStart);
-                    essenceGrid.appendChild(card);
+                selectedNotes[noteType].forEach(essenceName => {
+                    const tag = document.createElement('div');
+                    tag.className = 'note-tag';
+                    tag.textContent = essenceName;
+                    
+                    const removeBtn = document.createElement('button');
+                    removeBtn.textContent = 'x';
+                    removeBtn.setAttribute('aria-label', `Remover ${essenceName}`);
+                    removeBtn.onclick = () => removeEssence(noteType, essenceName);
+                    
+                    tag.appendChild(removeBtn);
+                    container.appendChild(tag);
                 });
+            });
+        }
+        
+        pyramidZones.forEach(zone => {
+            zone.addEventListener('click', (e) => {
+                if(e.target.closest('button')) return;
+                setActiveZone(zone)
+            });
+        });
+
+        essencesGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('.essence-card');
+            if (card) {
+                addEssenceToActiveZone(card.dataset.essence);
             }
+        });
+        
+        function checkCompletion() {
+            const isComplete = selectedNotes.top.size > 0 && selectedNotes.middle.size > 0 && selectedNotes.base.size > 0;
+            const existingButton = document.getElementById('generate-story-btn');
 
-            function renderEmotionFilters() {
-                Object.keys(suggestions).forEach(key => {
-                    const btn = document.createElement('button');
-                    btn.textContent = key.charAt(0).toUpperCase() + key.slice(1);
-                    btn.className = 'emotion-btn w-full bg-white text-stone-700 font-medium py-3 px-4 rounded-lg border border-stone-200 shadow-sm';
-                    btn.dataset.emotion = key;
-                    btn.addEventListener('click', handleEmotionClick);
-                    emotionFiltersContainer.appendChild(btn);
-                });
+            if (isComplete && !existingButton) {
+                const button = document.createElement('button');
+                button.id = 'generate-story-btn';
+                button.className = 'w-full gemini-btn font-semibold py-3 rounded-lg transition-colors';
+                button.innerHTML = '✨ Gerar Nome e História';
+                button.onclick = generateStory;
+                actionButtonContainer.appendChild(button);
+            } else if (!isComplete && existingButton) {
+                actionButtonContainer.innerHTML = '';
+                storyOutput.innerHTML = '';
+                imageOutput.innerHTML = '';
+            }
+        }
+        
+        async function callGemini(prompt, model, isJson = false) {
+             const button = document.querySelector('.gemini-btn:disabled');
+             const originalText = button ? button.innerHTML : null;
+             if(button) {
+                button.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+             }
+        
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            
+            const payload = { contents: [{ parts: [{ text: prompt }] }] };
+            if (isJson) {
+                payload.generationConfig = { responseMimeType: "application/json" };
             }
             
-            function handleEmotionClick(e) {
-                const emotion = e.target.dataset.emotion;
-                document.querySelectorAll('.emotion-btn').forEach(b => b.classList.remove('active'));
-                e.target.classList.add('active');
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error("Error calling Gemini API:", error);
+                const errorTarget = activeZoneId ? storyOutput : suggestionsOutput;
+                errorTarget.innerHTML = `<p class="text-red-500 text-center">Falha na comunicação com o servidor de IA. Tente novamente.</p>`;
+                return null;
+            } finally {
+                 if(button && originalText) {
+                    button.disabled = false;
+                    button.innerHTML = originalText;
+                }
+            }
+        }
+        
+        async function generateStory() {
+            document.getElementById('generate-story-btn').disabled = true;
+            const top = Array.from(selectedNotes.top).join(', ');
+            const middle = Array.from(selectedNotes.middle).join(', ');
+            const base = Array.from(selectedNotes.base).join(', ');
 
-                const suggestion = suggestions[emotion];
-                suggestionBox.innerHTML = `
-                    <h4 class="text-xl font-semibold mb-2 text-[#402E32]">${suggestion.title}</h4>
-                    <p class="text-gray-600 mb-4">${suggestion.text}</p>
-                    <div class="space-y-1">
-                        ${suggestion.examples.map(ex => `<p class="text-sm text-stone-700 bg-stone-200/50 rounded px-2 py-1">${ex}</p>`).join('')}
+            const prompt = `Aja como um especialista em branding de perfumes de luxo. Crie um nome e uma breve história de marketing (no máximo 3 frases) para um perfume com as seguintes notas: - Saída: ${top} - Corpo: ${middle} - Fundo: ${base}. A história deve ser evocativa, luxuosa e despertar desejo. O tom deve ser sofisticado. Responda em formato JSON com as chaves "name" e "story".`;
+            
+            storyOutput.innerHTML = `<div class="text-center p-6"><p>Criando uma identidade para sua fragrância...</p></div>`;
+
+            const result = await callGemini(prompt, 'gemini-2.5-flash-preview-05-20', true);
+            if (result) {
+                try {
+                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!text) throw new Error("Resposta da API vazia.");
+                    
+                    const { name, story } = JSON.parse(text);
+                    storyOutput.innerHTML = `
+                        <div class="text-center p-6 bg-stone-50 rounded-lg shadow-inner">
+                            <h3 class="text-2xl font-bold mb-2 text-[#402E32]">${name}</h3>
+                            <p class="text-gray-600">${story}</p>
+                            <button id="generate-bottle-btn" class="mt-6 w-full max-w-xs mx-auto gemini-btn font-semibold py-2 rounded-lg transition-colors">🕊️ Batizar com um Frasco</button>
+                        </div>`;
+                    document.getElementById('generate-bottle-btn').addEventListener('click', () => baptizeFragrance(name, story));
+                } catch(e) {
+                     console.error("Erro ao processar a resposta da IA:", e);
+                     storyOutput.innerHTML = `<p class="text-red-500 text-center">A IA retornou uma resposta inesperada. Tente novamente.</p>`;
+                }
+            }
+            const genButton = document.getElementById('generate-story-btn');
+            if(genButton) genButton.disabled = false;
+        }
+
+        async function baptizeFragrance(name, story) {
+            const button = document.getElementById('generate-bottle-btn');
+            button.disabled = true;
+            const prompt = `Fotografia de produto de um frasco de perfume de luxo. O design do frasco é minimalista e elegante, inspirado por: "${story}". O nome do perfume é "${name}". O nome não precisa estar visível no frasco. O frasco está sobre uma superfície de mármore limpa. O fundo é suave e desfocado, em tons neutros. A iluminação é de estúdio, suave e difusa, realçando as curvas do vidro. Fotografia cinematográfica, ultrarrealista, 8k.`;
+            
+            imageOutput.innerHTML = `<div class="text-center p-6"><p>Esculpindo o frasco perfeito...</p></div>`;
+            button.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+            
+            const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1} };
+            const apiKey = "";
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                const result = await response.json();
+                
+                if (result.predictions && result.predictions[0]?.bytesBase64Encoded) {
+                    const imageUrl = `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}`;
+                    imageOutput.innerHTML = `
+                        <div class="p-4 bg-stone-50 rounded-lg shadow-inner">
+                             <h3 class="text-xl font-bold mb-4 text-[#402E32]">Sua Criação, Materializada</h3>
+                            <img src="${imageUrl}" alt="Frasco de perfume gerado por IA para ${name}" class="rounded-lg mx-auto shadow-xl max-w-sm w-full">
+                        </div>`;
+                } else {
+                    throw new Error("Resposta da API de imagem inválida.");
+                }
+            } catch(error) {
+                console.error("Erro ao gerar imagem:", error);
+                imageOutput.innerHTML = `<p class="text-red-500 text-center">Não foi possível criar a imagem do frasco. Tente novamente.</p>`;
+            } finally {
+                 button.style.display = 'none';
+            }
+        }
+        
+        // --- NEW SUGGESTION LOGIC ---
+        function getBriefingData() {
+            const form = document.getElementById('briefing-form');
+            const checkedCheckboxes = form.querySelectorAll('input[type="checkbox"]:checked');
+            const data = {
+                objetivo: [], transmitir: [], preferencias: [], produtos: [],
+                observacoes: form.querySelector('#observacoes').value,
+                referencias: form.querySelector('#referencias').value,
+            };
+
+            checkedCheckboxes.forEach(checkbox => {
+                if (data[checkbox.name]) {
+                    data[checkbox.name].push(checkbox.value);
+                }
+            });
+            return data;
+        }
+        
+        async function generateSuggestions() {
+            const briefingData = getBriefingData();
+            getSuggestionsBtn.disabled = true;
+
+            const prompt = `
+                Aja como um perfumista sênior criando sugestões de fragrâncias para um cliente.
+                Baseado no seguinte briefing:
+                - Objetivo: ${briefingData.objetivo.join(', ') || 'Não especificado'}
+                - Sensações desejadas: ${briefingData.transmitir.join(', ') || 'Não especificado'}
+                - Preferências olfativas: ${briefingData.preferencias.join(', ') || 'Não especificado'}
+                - Produtos finais: ${briefingData.produtos.join(', ') || 'Não especificado'}
+                - Notas a evitar: ${briefingData.observacoes || 'Nenhuma'}
+                - Inspirações: ${briefingData.referencias || 'Nenhuma'}
+
+                Crie 2 sugestões de pirâmides olfativas (notas de saída, corpo e fundo).
+                IMPORTANTE: Use APENAS as seguintes essências disponíveis: ${essenceNames.join(', ')}.
+                Para cada sugestão, forneça um nome criativo e uma breve descrição do conceito.
+                Para cada essência dentro das notas, forneça uma porcentagem de mistura. A soma de todas as porcentagens em uma sugestão (saída + corpo + fundo) DEVE ser exatamente 100.
+
+                Responda em formato JSON com a seguinte estrutura:
+                {
+                  "suggestions": [
+                    {
+                      "name": "Nome da Sugestão 1",
+                      "description": "Descrição do conceito da fragrância 1.",
+                      "notes": {
+                        "top": [{"name": "Essência A", "percentage": 15}, {"name": "Essência B", "percentage": 15}],
+                        "middle": [{"name": "Essência C", "percentage": 40}],
+                        "base": [{"name": "Essência D", "percentage": 30}]
+                      }
+                    },
+                    {
+                      "name": "Nome da Sugestão 2",
+                      "description": "Descrição do conceito da fragrância 2.",
+                      "notes": {
+                        "top": [{"name": "Essência E", "percentage": 20}],
+                        "middle": [{"name": "Essência F", "percentage": 30}, {"name": "Essência G", "percentage": 20}],
+                        "base": [{"name": "Essência H", "percentage": 30}]
+                      }
+                    }
+                  ]
+                }
+            `;
+            
+            suggestionsOutput.innerHTML = `<div class="text-center p-6"><p>Analisando suas preferências para criar sugestões...</p></div>`;
+            const result = await callGemini(prompt, 'gemini-2.5-flash-preview-05-20', true);
+
+            if(result) {
+                try {
+                     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                     if (!text) throw new Error("Resposta da API vazia.");
+                     const parsedResult = JSON.parse(text);
+                     renderSuggestions(parsedResult.suggestions);
+                } catch(e) {
+                    console.error("Erro ao processar sugestões:", e);
+                    suggestionsOutput.innerHTML = `<p class="text-red-500 text-center">A IA retornou uma resposta inesperada. Tente novamente.</p>`;
+                }
+            }
+            getSuggestionsBtn.disabled = false;
+        }
+        
+        function renderSuggestions(suggestions) {
+            if (!suggestions || suggestions.length === 0) {
+                suggestionsOutput.innerHTML = `<p class="text-center text-gray-600">Nenhuma sugestão foi gerada. Tente refinar seu briefing.</p>`;
+                return;
+            }
+
+            let html = '<h3 class="text-2xl font-bold text-center mb-6">Sugestões da IA para Você</h3>';
+            html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-6">';
+
+            suggestions.forEach(suggestion => {
+                const formatNotes = (notesArray) => {
+                    if (!notesArray || notesArray.length === 0) return 'N/A';
+                    return notesArray.map(note => `${note.name} (${note.percentage}%)`).join(', ');
+                };
+
+                const notesHtml = `
+                    <p class="text-sm"><strong class="text-gray-700">Saída:</strong> ${formatNotes(suggestion.notes.top)}</p>
+                    <p class="text-sm"><strong class="text-gray-700">Corpo:</strong> ${formatNotes(suggestion.notes.middle)}</p>
+                    <p class="text-sm"><strong class="text-gray-700">Fundo:</strong> ${formatNotes(suggestion.notes.base)}</p>
+                `;
+                html += `
+                    <div class="suggestion-card bg-white p-6 rounded-lg shadow-sm">
+                        <h4 class="font-bold text-xl mb-2 text-[#8C6A5E]">${suggestion.name}</h4>
+                        <p class="text-gray-600 mb-4 text-sm">${suggestion.description}</p>
+                        <div class="space-y-1 mb-4">${notesHtml}</div>
+                        <button class="w-full gemini-btn font-semibold py-2 rounded-lg text-sm use-suggestion-btn" data-suggestion='${JSON.stringify(suggestion.notes)}'>
+                            Usar esta Fragrância
+                        </button>
                     </div>
                 `;
-            }
-
-            function handleDragStart(e) {
-                e.dataTransfer.setData('text/plain', JSON.stringify({
-                    name: e.target.dataset.name,
-                    note: e.target.dataset.note
-                }));
-            }
-
-            const dropzones = document.querySelectorAll('.pyramid-dropzone');
-            dropzones.forEach(zone => {
-                zone.addEventListener('dragover', handleDragOver);
-                zone.addEventListener('dragleave', handleDragLeave);
-                zone.addEventListener('drop', handleDrop);
-            });
-            
-            function handleDragOver(e) {
-                e.preventDefault();
-                e.currentTarget.classList.add('drag-over');
-            }
-
-            function handleDragLeave(e) {
-                e.currentTarget.classList.remove('drag-over');
-            }
-            
-            function handleDrop(e) {
-                e.preventDefault();
-                e.currentTarget.classList.remove('drag-over');
-                const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-                const targetZoneType = e.currentTarget.dataset.noteType;
-                
-                if (e.currentTarget.querySelector('.text-gray-400')) {
-                    e.currentTarget.innerHTML = '';
-                }
-
-                if (data.note === targetZoneType) {
-                    addPill(e.currentTarget, data.name, 'success');
-                } else {
-                    addPill(e.currentTarget, data.name, 'error');
-                }
-                checkPyramidCompletion();
-            }
-
-            function addPill(container, name, type) {
-                const pill = document.createElement('span');
-                const baseClasses = 'text-sm font-medium px-2.5 py-1 rounded-full';
-                if (type === 'success') {
-                    pill.className = `bg-green-100 text-green-800 ${baseClasses}`;
-                    pill.textContent = name;
-                    container.appendChild(pill);
-                } else if (type === 'error') {
-                    pill.className = `bg-red-100 text-red-800 ${baseClasses}`;
-                    pill.textContent = name;
-                    container.appendChild(pill);
-                    setTimeout(() => pill.remove(), 2000);
-                }
-            }
-            
-            function checkPyramidCompletion() {
-                const topNotes = document.querySelectorAll('#dropzone-top span:not(.text-gray-400)');
-                const middleNotes = document.querySelectorAll('#dropzone-middle span:not(.text-gray-400)');
-                const baseNotes = document.querySelectorAll('#dropzone-base span:not(.text-gray-400)');
-
-                if (topNotes.length > 0 && middleNotes.length > 0 && baseNotes.length > 0) {
-                    generateStoryBtn.classList.remove('hidden');
-                } else {
-                    generateStoryBtn.classList.add('hidden');
-                }
-            }
-            
-            function resetPyramid() {
-                document.getElementById('dropzone-top').innerHTML = '<span class="text-gray-400">Primeira Impressão</span>';
-                document.getElementById('dropzone-middle').innerHTML = '<span class="text-gray-400">O Coração</span>';
-                document.getElementById('dropzone-base').innerHTML = '<span class="text-gray-400">A Memória</span>';
-                generateStoryBtn.classList.add('hidden');
-                storyOutput.classList.add('hidden');
-                storyOutput.innerHTML = '';
-                document.getElementById('bottle-output').classList.add('hidden');
-                document.getElementById('bottle-output').innerHTML = '';
-            }
-
-            document.getElementById('reset-pyramid').addEventListener('click', resetPyramid);
-
-            async function generateFragranceStory() {
-                storyOutput.classList.remove('hidden');
-                storyOutput.innerHTML = '<div class="loader"></div>';
-                
-                const getNotes = (id) => Array.from(document.querySelectorAll(`#${id} span:not(.text-gray-400)`)).map(span => span.textContent);
-                
-                const topNotes = getNotes('dropzone-top').join(', ');
-                const middleNotes = getNotes('dropzone-middle').join(', ');
-                const baseNotes = getNotes('dropzone-base').join(', ');
-
-                const systemPrompt = "Você é um perfumista de classe mundial e especialista em branding. Sua tarefa é criar um nome e uma história de marketing para uma nova fragrância com base nas notas fornecidas. Responda em português do Brasil.";
-                const userQuery = `Crie um nome e uma história para uma fragrância com as seguintes notas:\nNotas de Saída: ${topNotes}\nNotas de Corpo: ${middleNotes}\nNotas de Fundo: ${baseNotes}`;
-
-                const apiKey = ""; // API key will be injected by the environment
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-
-                const payload = {
-                    contents: [{ parts: [{ text: userQuery }] }],
-                    systemInstruction: { parts: [{ text: systemPrompt }] },
-                    generationConfig: {
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                name: { type: "STRING", description: "O nome da fragrância." },
-                                story: { type: "STRING", description: "A história ou descrição de marketing da fragrância." }
-                            },
-                            required: ["name", "story"]
-                        }
-                    }
-                };
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`API error: ${response.statusText}`);
-                    }
-
-                    const result = await response.json();
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                    
-                    if (text) {
-                        const { name, story } = JSON.parse(text);
-                        storyOutput.innerHTML = `
-                            <div class="text-center p-6 bg-stone-50 rounded-lg">
-                                <h3 class="text-2xl font-bold mb-2 text-[#402E32]">${name}</h3>
-                                <p class="text-gray-600">${story}</p>
-                                <button id="generate-bottle-btn" class="mt-6 w-full max-w-xs mx-auto gemini-btn font-semibold py-2 rounded-lg transition-colors">🕊️ Batizar com um Frasco</button>
-                            </div>
-                        `;
-                        document.getElementById('generate-bottle-btn').addEventListener('click', () => baptizeFragrance(name, story));
-                    } else {
-                        throw new Error("Resposta da API inválida.");
-                    }
-                } catch (error) {
-                    console.error("Erro ao gerar história:", error);
-                    storyOutput.innerHTML = `<p class="text-center text-red-500">Desculpe, não foi possível gerar a história. Tente novamente.</p>`;
-                }
-            }
-            
-            generateStoryBtn.addEventListener('click', generateFragranceStory);
-
-            async function baptizeFragrance(name, story) {
-                const bottleOutput = document.getElementById('bottle-output');
-                bottleOutput.classList.remove('hidden');
-                bottleOutput.innerHTML = '<div class="loader"></div>';
-
-                const generateBottleBtn = document.getElementById('generate-bottle-btn');
-                generateBottleBtn.disabled = true;
-                generateBottleBtn.textContent = 'Batizando...';
-
-                const getNotes = (id) => Array.from(document.querySelectorAll(`#${id} span:not(.text-gray-400)`)).map(span => span.textContent);
-                const topNotes = getNotes('dropzone-top').join(', ');
-                const middleNotes = getNotes('dropzone-middle').join(', ');
-                const baseNotes = getNotes('dropzone-base').join(', ');
-
-                const prompt = `Fotografia de produto de um frasco de perfume de luxo chamado "${name}". O design do frasco deve ser inspirado por esta história: "${story}". O frasco deve evocar a essência de suas notas principais (${topNotes}, ${middleNotes}, ${baseNotes}). O estilo deve ser elegante e fotorealista, em um fundo de estúdio neutro com iluminação suave.`;
-
-                const apiKey = ""; // API key will be injected
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
-                
-                const payload = {
-                    instances: [{ prompt: prompt }],
-                    parameters: { "sampleCount": 1 }
-                };
-
-                try {
-                    const response = await fetch(apiUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`API error: ${response.statusText}`);
-                    }
-
-                    const result = await response.json();
-                    const base64Data = result.predictions?.[0]?.bytesBase64Encoded;
-
-                    if (base64Data) {
-                        const imageUrl = `data:image/png;base64,${base64Data}`;
-                        bottleOutput.innerHTML = `
-                            <div class="text-center">
-                                 <h3 class="text-2xl font-semibold mb-4">O Batismo da Fragrância</h3>
-                                 <img src="${imageUrl}" alt="Frasco de perfume para ${name}" class="rounded-lg shadow-lg mx-auto max-w-sm w-full">
-                            </div>
-                        `;
-                    } else {
-                         throw new Error("Nenhuma imagem recebida da API.");
-                    }
-                } catch (error) {
-                    console.error("Erro ao batizar fragrância:", error);
-                    bottleOutput.innerHTML = `<p class="text-center text-red-500">Desculpe, não foi possível realizar o batismo. Tente novamente.</p>`;
-                } finally {
-                    generateBottleBtn.disabled = false;
-                    generateBottleBtn.textContent = '🕊️ Batizar com um Frasco';
-                }
-            }
-
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    document.querySelector(this.getAttribute('href')).scrollIntoView({
-                        behavior: 'smooth'
-                    });
-                });
             });
 
-            renderFilters();
-            renderEssences();
-            renderEmotionFilters();
+            html += '</div>';
+            suggestionsOutput.innerHTML = html;
+        }
+
+        suggestionsOutput.addEventListener('click', function(e){
+            if(e.target.classList.contains('use-suggestion-btn')) {
+                const notes = JSON.parse(e.target.dataset.suggestion);
+                
+                // Clear existing selections
+                Object.keys(selectedNotes).forEach(key => selectedNotes[key].clear());
+                
+                // Apply new selections by extracting just the names
+                selectedNotes.top = new Set(notes.top.map(note => note.name).filter(name => essenceNames.includes(name)));
+                selectedNotes.middle = new Set(notes.middle.map(note => note.name).filter(name => essenceNames.includes(name)));
+                selectedNotes.base = new Set(notes.base.map(note => note.name).filter(name => essenceNames.includes(name)));
+                
+                renderPyramid();
+                checkCompletion();
+                
+                document.getElementById('creator').scrollIntoView({ behavior: 'smooth' });
+            }
         });
+
+        getSuggestionsBtn.addEventListener('click', generateSuggestions);
+        
+        // Initial Load
+        renderEssences();
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
