@@ -89,9 +89,30 @@
              border: 1px solid #e2d9d4;
              transition: all 0.3s ease;
         }
+        /* API Key Modal */
+        #api-key-modal.hidden {
+            display: none;
+        }
     </style>
 </head>
 <body class="antialiased">
+
+    <!-- API Key Modal -->
+    <div id="api-key-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-lg shadow-2xl p-8 max-w-md w-full">
+            <h2 class="text-2xl font-bold mb-4">Configurar Chave de API</h2>
+            <p class="text-gray-600 mb-6">Para usar as funcionalidades de IA, você precisa de uma Chave de API do Google AI Studio. É gratuito e fácil de obter.</p>
+            <div class="mb-4">
+                <label for="api-key-input" class="block text-sm font-semibold mb-2">Sua Chave de API do Google AI</label>
+                <input type="password" id="api-key-input" placeholder="Cole sua chave aqui" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#C5A880]">
+            </div>
+            <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-sm text-[#8C6A5E] hover:underline">Precisa de uma chave? Obtenha uma aqui.</a>
+            <div class="mt-6">
+                <button id="save-api-key-btn" class="w-full gemini-btn font-semibold py-2 rounded-lg transition-colors">Salvar e Continuar</button>
+            </div>
+        </div>
+    </div>
+
 
     <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -304,6 +325,12 @@
         const getSuggestionsBtn = document.getElementById('get-suggestions-btn');
         const suggestionsOutput = document.getElementById('suggestions-output');
         
+        // API Key Elements
+        const apiKeyModal = document.getElementById('api-key-modal');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        let geminiApiKey = null;
+
         // State Management
         let activeZoneId = null;
         const selectedNotes = {
@@ -410,15 +437,43 @@
             }
         }
         
+        // --- API KEY HANDLING ---
+        function setupApiKey() {
+            geminiApiKey = localStorage.getItem('geminiApiKey');
+            if (!geminiApiKey) {
+                apiKeyModal.classList.remove('hidden');
+            }
+        }
+
+        saveApiKeyBtn.addEventListener('click', () => {
+            const key = apiKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem('geminiApiKey', key);
+                geminiApiKey = key;
+                apiKeyModal.classList.add('hidden');
+            } else {
+                alert('Por favor, insira uma Chave de API válida.');
+            }
+        });
+        
+        function ensureApiKey() {
+            if (!geminiApiKey) {
+                apiKeyModal.classList.remove('hidden');
+                return false;
+            }
+            return true;
+        }
+
         async function callGemini(prompt, model, isJson = false) {
+             if (!ensureApiKey()) return null;
+
              const button = document.querySelector('.gemini-btn:disabled');
              const originalText = button ? button.innerHTML : null;
              if(button) {
                 button.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
              }
         
-            const apiKey = "COLE_SUA_CHAVE_API_AQUI"; // <-- IMPORTANTE: Adicione sua chave aqui
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${geminiApiKey}`;
             
             const payload = { contents: [{ parts: [{ text: prompt }] }] };
             if (isJson) {
@@ -436,7 +491,7 @@
             } catch (error) {
                 console.error("Error calling Gemini API:", error);
                 const errorTarget = activeZoneId ? storyOutput : suggestionsOutput;
-                errorTarget.innerHTML = `<p class="text-red-500 text-center">Falha na comunicação com o servidor de IA. Tente novamente.</p>`;
+                errorTarget.innerHTML = `<p class="text-red-500 text-center">Falha na comunicação com o servidor de IA. Verifique sua chave de API ou tente novamente.</p>`;
                 return null;
             } finally {
                  if(button && originalText) {
@@ -447,6 +502,7 @@
         }
         
         async function generateStory() {
+            if (!ensureApiKey()) return;
             document.getElementById('generate-story-btn').disabled = true;
             const top = Array.from(selectedNotes.top).join(', ');
             const middle = Array.from(selectedNotes.middle).join(', ');
@@ -480,6 +536,7 @@
         }
 
         async function baptizeFragrance(name, story) {
+            if (!ensureApiKey()) return;
             const button = document.getElementById('generate-bottle-btn');
             button.disabled = true;
             const prompt = `Fotografia de produto de um frasco de perfume de luxo. O design do frasco é minimalista e elegante, inspirado por: "${story}". O nome do perfume é "${name}". O nome não precisa estar visível no frasco. O frasco está sobre uma superfície de mármore limpa. O fundo é suave e desfocado, em tons neutros. A iluminação é de estúdio, suave e difusa, realçando as curvas do vidro. Fotografia cinematográfica, ultrarrealista, 8k.`;
@@ -488,8 +545,7 @@
             button.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
             
             const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1} };
-            const apiKey = "COLE_SUA_CHAVE_API_AQUI"; // <-- IMPORTANTE: Adicione sua chave aqui também
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiApiKey}`;
 
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -508,7 +564,7 @@
                 }
             } catch(error) {
                 console.error("Erro ao gerar imagem:", error);
-                imageOutput.innerHTML = `<p class="text-red-500 text-center">Não foi possível criar a imagem do frasco. Tente novamente.</p>`;
+                imageOutput.innerHTML = `<p class="text-red-500 text-center">Não foi possível criar a imagem do frasco. Verifique sua chave de API ou tente novamente.</p>`;
             } finally {
                  button.style.display = 'none';
             }
@@ -533,6 +589,7 @@
         }
         
         async function generateSuggestions() {
+            if (!ensureApiKey()) return;
             const briefingData = getBriefingData();
             getSuggestionsBtn.disabled = true;
 
@@ -651,10 +708,11 @@
         getSuggestionsBtn.addEventListener('click', generateSuggestions);
         
         // Initial Load
-        renderEssences();
+        document.addEventListener('DOMContentLoaded', () => {
+            setupApiKey();
+            renderEssences();
+        });
     </script>
 </body>
 </html>
-
-
 
