@@ -38,38 +38,73 @@
         .essence-card {
             transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
             cursor: pointer;
+            border: 1px solid #f0ebe6;
         }
         .essence-card:hover {
             transform: translateY(-4px);
             box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+            border-color: #C5A880;
         }
         .pyramid-zone {
             border: 2px dashed #D1C4E9; /* Lighter purple border */
             transition: all 0.3s ease;
             cursor: pointer;
+            position: relative;
+        }
+        .pyramid-zone:hover {
+            background-color: #fafafa;
         }
         .pyramid-zone.active-zone {
              border-color: #8C6A5E; /* Warm brown border for active */
              background-color: #F5F1EE; /* Slightly darker bg for active */
              border-style: solid;
+             box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
         }
+        .pyramid-zone::after {
+            content: 'Selecionado';
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: #8C6A5E;
+            color: white;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .pyramid-zone.active-zone::after {
+            opacity: 1;
+        }
+
         .note-tag {
             display: inline-flex;
             align-items: center;
             background-color: #8C6A5E; /* Warm brown */
             color: white;
-            padding: 4px 12px;
-            border-radius: 9999px;
-            font-size: 0.875rem;
-            margin: 4px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.80rem;
+            margin: 3px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         .note-tag button {
-            margin-left: 8px;
-            background: none;
+            margin-left: 6px;
+            background: rgba(255,255,255,0.2);
             border: none;
             color: white;
             font-weight: bold;
             cursor: pointer;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+        }
+        .note-tag button:hover {
+            background: rgba(255,255,255,0.4);
         }
         /* Custom form styling */
         .form-checkbox {
@@ -92,6 +127,27 @@
         /* API Key Modal */
         #api-key-modal.hidden {
             display: none;
+        }
+        /* Sticky sidebar adjustments */
+        @media (min-width: 1024px) {
+            .sticky-sidebar {
+                position: sticky;
+                top: 100px; /* Adjust based on header height */
+                max-height: calc(100vh - 120px);
+                overflow-y: auto;
+                padding-right: 4px; /* Space for scrollbar if needed */
+            }
+            /* Custom scrollbar for sidebar */
+            .sticky-sidebar::-webkit-scrollbar {
+                width: 4px;
+            }
+            .sticky-sidebar::-webkit-scrollbar-track {
+                background: transparent;
+            }
+            .sticky-sidebar::-webkit-scrollbar-thumb {
+                background: #e2d9d4;
+                border-radius: 2px;
+            }
         }
     </style>
 </head>
@@ -121,8 +177,8 @@
             </a>
             <div class="hidden md:flex items-center space-x-8">
                 <a href="#briefing" class="nav-link">Briefing</a>
-                <a href="#creator" class="nav-link">Criador</a>
-                <a href="#explorer" class="nav-link">Essências</a>
+                <a href="#workshop" class="nav-link">Criação</a>
+                <a href="#guide" class="nav-link">Guia</a>
             </div>
         </nav>
     </header>
@@ -134,123 +190,157 @@
         </section>
 
         <section id="briefing" class="mb-16">
-            <h2 class="text-3xl font-bold text-center mb-8">Briefing Criativo</h2>
-            <p class="text-center text-lg text-gray-600 max-w-3xl mx-auto mb-12">Responda estas perguntas para receber sugestões de fragrâncias personalizadas.</p>
-            <div id="briefing-form" class="max-w-4xl mx-auto bg-white p-8 rounded-lg shadow-md space-y-8">
-                
-                <div>
-                    <h3 class="font-bold text-xl mb-4">1. Objetivo da fragrância</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Uso pessoal" class="form-checkbox"><span>Uso pessoal</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Presente especial" class="form-checkbox"><span>Presente especial</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Identidade olfativa da marca" class="form-checkbox"><span>Identidade olfativa</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Evento específico" class="form-checkbox"><span>Evento específico</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Outro" class="form-checkbox"><span>Outro</span></label>
+            <div class="bg-stone-50 rounded-xl p-6 border border-stone-100">
+                <div class="flex justify-between items-center cursor-pointer" onclick="document.getElementById('briefing-content').classList.toggle('hidden'); document.getElementById('briefing-arrow').classList.toggle('rotate-180')">
+                    <h2 class="text-2xl font-bold text-[#402E32]">Briefing Criativo (Opcional)</h2>
+                    <svg id="briefing-arrow" class="w-6 h-6 transition-transform transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="briefing-content" class="hidden mt-6 transition-all">
+                    <p class="text-lg text-gray-600 mb-8">Responda estas perguntas para receber sugestões de fragrâncias personalizadas.</p>
+                    <div id="briefing-form" class="bg-white p-6 rounded-lg shadow-sm space-y-8">
+                        
+                        <div>
+                            <h3 class="font-bold text-xl mb-4">1. Objetivo da fragrância</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Uso pessoal" class="form-checkbox"><span>Uso pessoal</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Presente especial" class="form-checkbox"><span>Presente especial</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Identidade olfativa da marca" class="form-checkbox"><span>Identidade olfativa</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Evento específico" class="form-checkbox"><span>Evento específico</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="objetivo" value="Outro" class="form-checkbox"><span>Outro</span></label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold text-xl mb-4">2. O que você deseja transmitir?</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Tranquilidade" class="form-checkbox"><span>Tranquilidade</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Energia" class="form-checkbox"><span>Energia</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Sofisticação" class="form-checkbox"><span>Sofisticação</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Leveza" class="form-checkbox"><span>Leveza</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Aconchego" class="form-checkbox"><span>Aconchego</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Alegria" class="form-checkbox"><span>Alegria</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Delicadeza" class="form-checkbox"><span>Delicadeza</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Outro" class="form-checkbox"><span>Outro</span></label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold text-xl mb-4">3. Preferências Olfativas</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Cítricos" class="form-checkbox"><span>Cítricos</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Florais" class="form-checkbox"><span>Florais</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Amadeirados" class="form-checkbox"><span>Amadeirados</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Gourmands" class="form-checkbox"><span>Gourmands</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Especiarias" class="form-checkbox"><span>Especiarias</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Herbais" class="form-checkbox"><span>Herbais</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Orientais" class="form-checkbox"><span>Orientais</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Não sei / Sugestões" class="form-checkbox"><span>Não sei / Sugestões</span></label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold text-xl mb-4">4. Produtos desejados</h3>
+                            <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Vela aromática" class="form-checkbox"><span>Vela aromática</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Difusor de varetas" class="form-checkbox"><span>Difusor de varetas</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Home spray" class="form-checkbox"><span>Home spray</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Sabonete líquido" class="form-checkbox"><span>Sabonete líquido</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Álcool em gel" class="form-checkbox"><span>Álcool em gel</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Essência concentrada" class="form-checkbox"><span>Essência concentrada</span></label>
+                                <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Outro" class="form-checkbox"><span>Outro</span></label>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h3 class="font-bold text-xl mb-4">5. Observações</h3>
+                            <label for="observacoes" class="text-sm text-gray-600 block">Há algum ingrediente ou nota que você não gosta ou deseja evitar?</label>
+                            <textarea id="observacoes" name="observacoes" rows="4" class="mt-2 w-full p-3 border rounded-lg form-textarea"></textarea>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-bold text-xl mb-4">6. Referências</h3>
+                            <label for="referencias" class="text-sm text-gray-600 block">Deseja que o aroma seja inspirado em alguma memória, produto ou lugar especial?</label>
+                            <textarea id="referencias" name="referencias" rows="4" class="mt-2 w-full p-3 border rounded-lg form-textarea"></textarea>
+                        </div>
+
+                        <div class="pt-4">
+                            <button id="get-suggestions-btn" class="w-full gemini-btn font-semibold py-3 rounded-lg transition-colors text-lg">
+                                💡 Gerar Sugestões com IA
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="suggestions-output" class="max-w-4xl mx-auto mt-8">
+                        <!-- AI Suggestions will be rendered here -->
                     </div>
                 </div>
-
-                <div>
-                    <h3 class="font-bold text-xl mb-4">2. O que você deseja transmitir?</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Tranquilidade" class="form-checkbox"><span>Tranquilidade</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Energia" class="form-checkbox"><span>Energia</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Sofisticação" class="form-checkbox"><span>Sofisticação</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Leveza" class="form-checkbox"><span>Leveza</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Aconchego" class="form-checkbox"><span>Aconchego</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Alegria" class="form-checkbox"><span>Alegria</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Delicadeza" class="form-checkbox"><span>Delicadeza</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="transmitir" value="Outro" class="form-checkbox"><span>Outro</span></label>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="font-bold text-xl mb-4">3. Preferências Olfativas</h3>
-                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Cítricos" class="form-checkbox"><span>Cítricos</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Florais" class="form-checkbox"><span>Florais</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Amadeirados" class="form-checkbox"><span>Amadeirados</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Gourmands" class="form-checkbox"><span>Gourmands</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Especiarias" class="form-checkbox"><span>Especiarias</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Herbais" class="form-checkbox"><span>Herbais</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Orientais" class="form-checkbox"><span>Orientais</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="preferencias" value="Não sei / Sugestões" class="form-checkbox"><span>Não sei / Sugestões</span></label>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="font-bold text-xl mb-4">4. Produtos desejados</h3>
-                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Vela aromática" class="form-checkbox"><span>Vela aromática</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Difusor de varetas" class="form-checkbox"><span>Difusor de varetas</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Home spray" class="form-checkbox"><span>Home spray</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Sabonete líquido" class="form-checkbox"><span>Sabonete líquido</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Álcool em gel" class="form-checkbox"><span>Álcool em gel</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Essência concentrada" class="form-checkbox"><span>Essência concentrada</span></label>
-                        <label class="flex items-center space-x-2 p-3 rounded-lg border border-gray-200 cursor-pointer hover:bg-stone-50"><input type="checkbox" name="produtos" value="Outro" class="form-checkbox"><span>Outro</span></label>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="font-bold text-xl mb-4">5. Observações</h3>
-                    <label for="observacoes" class="text-sm text-gray-600 block">Há algum ingrediente ou nota que você não gosta ou deseja evitar?</label>
-                    <textarea id="observacoes" name="observacoes" rows="4" class="mt-2 w-full p-3 border rounded-lg form-textarea"></textarea>
-                </div>
-                 
-                <div>
-                    <h3 class="font-bold text-xl mb-4">6. Referências</h3>
-                    <label for="referencias" class="text-sm text-gray-600 block">Deseja que o aroma seja inspirado em alguma memória, produto ou lugar especial?</label>
-                    <textarea id="referencias" name="referencias" rows="4" class="mt-2 w-full p-3 border rounded-lg form-textarea"></textarea>
-                </div>
-
-                <div class="pt-4">
-                     <button id="get-suggestions-btn" class="w-full gemini-btn font-semibold py-3 rounded-lg transition-colors text-lg">
-                        💡 Gerar Sugestões com IA
-                    </button>
-                </div>
-            </div>
-
-             <div id="suggestions-output" class="max-w-4xl mx-auto mt-8">
-                <!-- AI Suggestions will be rendered here -->
             </div>
         </section>
 
-        <section id="creator" class="mb-16">
-            <h2 class="text-3xl font-bold text-center mb-8">Criador de Fragrâncias</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-                <div class="lg:col-span-1 space-y-4">
-                     <div class="bg-white p-6 rounded-lg shadow-md">
-                        <h3 class="font-bold text-xl mb-2 text-center">Pirâmide Olfativa</h3>
-                        <p class="text-center text-sm text-gray-500 mb-4">1. Clique em uma seção. <br> 2. Depois, clique nas essências para adicionar.</p>
-                        <div id="top-notes-zone" data-note-type="top" class="pyramid-zone p-4 rounded-lg min-h-[100px] text-center">
-                            <h4 class="font-semibold text-gray-500">Notas de Saída</h4>
-                            <div class="flex flex-wrap justify-center mt-2"></div>
-                        </div>
-                        <div id="middle-notes-zone" data-note-type="middle" class="pyramid-zone p-4 mt-4 rounded-lg min-h-[100px] text-center">
-                            <h4 class="font-semibold text-gray-500">Notas de Corpo</h4>
-                             <div class="flex flex-wrap justify-center mt-2"></div>
-                        </div>
-                        <div id="base-notes-zone" data-note-type="base" class="pyramid-zone p-4 mt-4 rounded-lg min-h-[100px] text-center">
-                            <h4 class="font-semibold text-gray-500">Notas de Fundo</h4>
-                             <div class="flex flex-wrap justify-center mt-2"></div>
-                        </div>
+        <!-- MAIN WORKSHOP AREA: Side by Side -->
+        <section id="workshop" class="flex flex-col lg:flex-row gap-8 items-start mb-16 relative">
+            
+            <!-- LEFT COLUMN: BUILDER & RESULTS (Sticky) -->
+            <div id="creator" class="w-full lg:w-1/3 sticky-sidebar space-y-6">
+                 <div class="bg-white p-6 rounded-lg shadow-xl border-t-4 border-[#402E32]">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="font-bold text-xl text-[#402E32]">Sua Pirâmide</h3>
+                        <button onclick="clearPyramid()" class="text-xs text-red-400 hover:text-red-600 underline">Limpar tudo</button>
                     </div>
-                     <div id="action-button-container" class="mt-4">
+                    
+                    <p class="text-center text-xs text-gray-500 mb-4 bg-gray-100 p-2 rounded">
+                        1. Selecione uma zona abaixo.<br>
+                        2. Clique nas essências ao lado para adicionar.
+                    </p>
+
+                    <div id="top-notes-zone" data-note-type="top" class="pyramid-zone p-3 rounded-lg min-h-[90px] text-center mb-3">
+                        <h4 class="font-semibold text-gray-500 text-sm uppercase tracking-wide">Notas de Saída</h4>
+                        <div class="flex flex-wrap justify-center mt-2"></div>
+                    </div>
+                    
+                    <div id="middle-notes-zone" data-note-type="middle" class="pyramid-zone p-3 rounded-lg min-h-[90px] text-center mb-3">
+                        <h4 class="font-semibold text-gray-500 text-sm uppercase tracking-wide">Notas de Corpo</h4>
+                         <div class="flex flex-wrap justify-center mt-2"></div>
+                    </div>
+                    
+                    <div id="base-notes-zone" data-note-type="base" class="pyramid-zone p-3 rounded-lg min-h-[90px] text-center">
+                        <h4 class="font-semibold text-gray-500 text-sm uppercase tracking-wide">Notas de Fundo</h4>
+                         <div class="flex flex-wrap justify-center mt-2"></div>
+                    </div>
+
+                    <div id="action-button-container" class="mt-6">
                         <!-- Botão para gerar nome/história aparecerá aqui -->
                     </div>
                 </div>
 
-                <div id="ai-results" class="lg:col-span-2 space-y-6">
-                     <div id="story-output" class="min-h-[100px]">
+                <!-- AI RESULTS moved under the pyramid -->
+                <div id="ai-results" class="space-y-4">
+                     <div id="story-output" class="empty:hidden">
                         <!-- Nome e história da fragrância aparecerão aqui -->
                     </div>
-                    <div id="image-output" class="text-center">
+                    <div id="image-output" class="text-center empty:hidden">
                         <!-- Imagem do frasco aparecerá aqui -->
                     </div>
                 </div>
             </div>
+
+            <!-- RIGHT COLUMN: ESSENCES EXPLORER -->
+            <div id="explorer" class="w-full lg:w-2/3">
+                <div class="flex flex-col md:flex-row justify-between items-end mb-6">
+                    <div>
+                        <h2 class="text-3xl font-bold text-[#402E32]">Essências</h2>
+                        <p class="text-gray-600">Clique para adicionar à zona selecionada.</p>
+                    </div>
+                    <!-- Filter placeholders could go here later -->
+                </div>
+                
+                <div id="essences-grid" class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Essences will be loaded here by JavaScript -->
+                </div>
+            </div>
         </section>
 
-        <section id="guide" class="my-16">
+        <section id="guide" class="my-16 border-t pt-12">
             <h2 class="text-3xl font-bold text-center mb-8">Guia da Pirâmide Olfativa</h2>
             <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
                 <!-- Card Saída -->
@@ -271,13 +361,6 @@
                     <p class="text-sm text-gray-600 mb-2"><strong>A base da fragrância.</strong> Dão profundidade, fixação e podem durar horas.</p>
                     <p class="text-sm font-semibold text-gray-800">Ideal para: Amadeirados, Gourmand, Orientais.</p>
                 </div>
-            </div>
-        </section>
-
-        <section id="explorer" class="pt-12">
-            <h2 class="text-3xl font-bold text-center mb-8">Explore Nossas Essências</h2>
-            <div id="essences-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                <!-- Essences will be loaded here by JavaScript -->
             </div>
         </section>
     </main>
@@ -343,11 +426,11 @@
             essencesGrid.innerHTML = '';
             essences.forEach(essence => {
                 const card = document.createElement('div');
-                card.className = 'essence-card bg-white p-4 rounded-lg shadow-sm text-center';
+                card.className = 'essence-card bg-white p-4 rounded-lg shadow-sm text-center flex flex-col items-center justify-center min-h-[100px]';
                 card.dataset.essence = essence.name;
                 card.innerHTML = `
-                    <h3 class="font-semibold text-md">${essence.name}</h3>
-                    <p class="text-sm text-gray-500">${essence.family}</p>
+                    <h3 class="font-semibold text-sm mb-1">${essence.name}</h3>
+                    <span class="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">${essence.family}</span>
                 `;
                 essencesGrid.appendChild(card);
             });
@@ -363,10 +446,19 @@
                 activeZoneId = null;
             }
         }
+        
+        function clearPyramid() {
+            Object.keys(selectedNotes).forEach(key => selectedNotes[key].clear());
+            renderPyramid();
+            checkCompletion();
+        }
 
         function addEssenceToActiveZone(essenceName) {
             if (!activeZoneId) {
+                // If nothing selected, flash the first zone to suggest selecting it
                 topNotesZone.classList.add('active-zone');
+                setTimeout(() => topNotesZone.classList.remove('active-zone'), 300);
+                setTimeout(() => topNotesZone.classList.add('active-zone'), 600);
                 activeZoneId = topNotesZone.id;
             }
             const noteType = document.getElementById(activeZoneId).dataset.noteType;
@@ -389,15 +481,22 @@
                 const container = zone.querySelector('.flex');
                 container.innerHTML = '';
                 
+                if (selectedNotes[noteType].size === 0) {
+                     // Placeholder styling if empty could go here
+                }
+
                 selectedNotes[noteType].forEach(essenceName => {
                     const tag = document.createElement('div');
                     tag.className = 'note-tag';
-                    tag.textContent = essenceName;
+                    tag.innerHTML = `<span>${essenceName}</span>`;
                     
                     const removeBtn = document.createElement('button');
-                    removeBtn.textContent = 'x';
+                    removeBtn.textContent = '✕';
                     removeBtn.setAttribute('aria-label', `Remover ${essenceName}`);
-                    removeBtn.onclick = () => removeEssence(noteType, essenceName);
+                    removeBtn.onclick = (e) => {
+                        e.stopPropagation();
+                        removeEssence(noteType, essenceName);
+                    };
                     
                     tag.appendChild(removeBtn);
                     container.appendChild(tag);
@@ -426,7 +525,10 @@
             if (isComplete && !existingButton) {
                 const button = document.createElement('button');
                 button.id = 'generate-story-btn';
-                button.className = 'w-full gemini-btn font-semibold py-3 rounded-lg transition-colors';
+                button.className = 'w-full gemini-btn font-semibold py-3 rounded-lg transition-colors shadow-lg animate-bounce';
+                // Remove bounce after 3s
+                setTimeout(() => button.classList.remove('animate-bounce'), 3000);
+                
                 button.innerHTML = '✨ Gerar Nome e História';
                 button.onclick = generateStory;
                 actionButtonContainer.appendChild(button);
@@ -510,7 +612,7 @@
 
             const prompt = `Aja como um especialista em branding de perfumes de luxo. Crie um nome e uma breve história de marketing (no máximo 3 frases) para um perfume com as seguintes notas: - Saída: ${top} - Corpo: ${middle} - Fundo: ${base}. A história deve ser evocativa, luxuosa e despertar desejo. O tom deve ser sofisticado. Responda em formato JSON com as chaves "name" e "story".`;
             
-            storyOutput.innerHTML = `<div class="text-center p-6"><p>Criando uma identidade para sua fragrância...</p></div>`;
+            storyOutput.innerHTML = `<div class="text-center p-6"><p class="animate-pulse">Criando uma identidade para sua fragrância...</p></div>`;
 
             const result = await callGemini(prompt, 'gemini-2.5-flash-preview-05-20', true);
             if (result) {
@@ -520,10 +622,10 @@
                     
                     const { name, story } = JSON.parse(text);
                     storyOutput.innerHTML = `
-                        <div class="text-center p-6 bg-stone-50 rounded-lg shadow-inner">
+                        <div class="text-center p-6 bg-stone-50 rounded-lg shadow-inner border border-[#C5A880]/30">
                             <h3 class="text-2xl font-bold mb-2 text-[#402E32]">${name}</h3>
-                            <p class="text-gray-600">${story}</p>
-                            <button id="generate-bottle-btn" class="mt-6 w-full max-w-xs mx-auto gemini-btn font-semibold py-2 rounded-lg transition-colors">🕊️ Batizar com um Frasco</button>
+                            <p class="text-gray-600 italic">"${story}"</p>
+                            <button id="generate-bottle-btn" class="mt-6 w-full max-w-xs mx-auto gemini-btn font-semibold py-2 rounded-lg transition-colors text-sm">🕊️ Batizar com um Frasco</button>
                         </div>`;
                     document.getElementById('generate-bottle-btn').addEventListener('click', () => baptizeFragrance(name, story));
                 } catch(e) {
@@ -541,7 +643,7 @@
             button.disabled = true;
             const prompt = `Fotografia de produto de um frasco de perfume de luxo. O design do frasco é minimalista e elegante, inspirado por: "${story}". O nome do perfume é "${name}". O nome não precisa estar visível no frasco. O frasco está sobre uma superfície de mármore limpa. O fundo é suave e desfocado, em tons neutros. A iluminação é de estúdio, suave e difusa, realçando as curvas do vidro. Fotografia cinematográfica, ultrarrealista, 8k.`;
             
-            imageOutput.innerHTML = `<div class="text-center p-6"><p>Esculpindo o frasco perfeito...</p></div>`;
+            imageOutput.innerHTML = `<div class="text-center p-6"><p class="animate-pulse">Esculpindo o frasco perfeito...</p></div>`;
             button.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
             
             const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1} };
@@ -701,7 +803,7 @@
                 renderPyramid();
                 checkCompletion();
                 
-                document.getElementById('creator').scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('workshop').scrollIntoView({ behavior: 'smooth' });
             }
         });
 
@@ -711,8 +813,9 @@
         document.addEventListener('DOMContentLoaded', () => {
             setupApiKey();
             renderEssences();
+            // Start with top notes active to encourage interaction
+            topNotesZone.click();
         });
     </script>
 </body>
 </html>
-
