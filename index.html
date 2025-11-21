@@ -593,7 +593,7 @@
             } catch (error) {
                 console.error("Error calling Gemini API:", error);
                 const errorTarget = activeZoneId ? storyOutput : suggestionsOutput;
-                errorTarget.innerHTML = `<p class="text-red-500 text-center">Falha na comunicação com o servidor de IA. Verifique sua chave de API ou tente novamente.</p>`;
+                errorTarget.innerHTML = `<p class="text-red-500 text-center">Falha na comunicação com o servidor de IA. Verifique sua chave de API.</p>`;
                 return null;
             } finally {
                  if(button && originalText) {
@@ -614,12 +614,16 @@
             
             storyOutput.innerHTML = `<div class="text-center p-6"><p class="animate-pulse">Criando uma identidade para sua fragrância...</p></div>`;
 
-            const result = await callGemini(prompt, 'gemini-2.5-flash-preview-05-20', true);
+            // Updated model
+            const result = await callGemini(prompt, 'gemini-2.5-flash-preview-09-2025', true);
             if (result) {
                 try {
-                    const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                    let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
                     if (!text) throw new Error("Resposta da API vazia.");
                     
+                    // Robust clean
+                    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
                     const { name, story } = JSON.parse(text);
                     storyOutput.innerHTML = `
                         <div class="text-center p-6 bg-stone-50 rounded-lg shadow-inner border border-[#C5A880]/30">
@@ -646,8 +650,9 @@
             imageOutput.innerHTML = `<div class="text-center p-6"><p class="animate-pulse">Esculpindo o frasco perfeito...</p></div>`;
             button.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
             
+            // Updated model
             const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1} };
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${geminiApiKey}`;
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-generate-001:predict?key=${geminiApiKey}`;
 
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -736,12 +741,17 @@
             `;
             
             suggestionsOutput.innerHTML = `<div class="text-center p-6"><p>Analisando suas preferências para criar sugestões...</p></div>`;
-            const result = await callGemini(prompt, 'gemini-2.5-flash-preview-05-20', true);
+            // Updated model
+            const result = await callGemini(prompt, 'gemini-2.5-flash-preview-09-2025', true);
 
             if(result) {
                 try {
-                     const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                     let text = result.candidates?.[0]?.content?.parts?.[0]?.text;
                      if (!text) throw new Error("Resposta da API vazia.");
+                     
+                     // Robust clean
+                     text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
                      const parsedResult = JSON.parse(text);
                      renderSuggestions(parsedResult.suggestions);
                 } catch(e) {
